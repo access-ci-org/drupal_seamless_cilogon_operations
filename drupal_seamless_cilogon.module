@@ -1,0 +1,106 @@
+<?php
+
+/**
+ * Module for seamless login.
+ *
+ * ACCESS sites would share logged in status via a session cookie that has access permissions 
+ * for any subdomain under http://access-ci.org . This cookie would be set by any site upon 
+ * successful login and could be cleared by any site on logout. Any ACCESS site would 
+ * automatically begin the CiLogon process on first page load if this cookie is set. 
+ * 
+ * Document describing option selected by the IAM working group, option 3.2.3:
+ *    https://drive.google.com/file/d/1lmzJ4gOQaeYg-RBl50pnl8BZGiJr7Fs9/view
+ * 
+ * This should be a new ACCESS module named drupal_seamless_cilogon in the 
+ * repository https://github.com/access-ci-org/drupal_seamless_cilogon
+ * 
+ */
+
+
+use Drupal\Component\Utility\Html;
+
+
+/**
+ * Implements hook_user_login().  If on a verified domain, set the "is-logged-in" cookie
+ * with an 18 hour expiration.  Include the site name (for debugging purposes).  If 
+ * on the access-ci.org domain, include that in the cookie as well.
+ */
+function drupal_seamless_cilogon_user_login($args) { 
+  
+  // only start this flow if we the domain is verified
+  if (!verify_domain()) {
+    return;
+  }
+
+  $site_name = \Drupal::config('system.site')->get('name');
+
+  // if site name ends with access-ci.org, set the cookie's domain to access-ci.org
+  $access_domain = 'access-ci.org';
+  $cookie_domain = str_ends_with($site_name, $access_domain)
+    ? $access_domain : '';
+
+  // set the cookie. 
+  setcookie(
+    'ACCESS-user-is-logged-in', // name
+    "DOMAIN=$site_name", // value
+    strtotime('+18 hours'), // expiration
+    '/', // path
+    $cookie_domain, // domain
+  );
+}
+
+/**
+ * Implements hook_user_logout().  Remove the cookie.
+ */
+function drupal_seamless_cilogon_user_logout($account) {
+  if (!verify_domain()) {
+    return;
+  }
+
+  // Set cookie in the past and then remove it.
+  setcookie('ACCESS-user-is-logged-in', '', strtotime('-1 hour'), '/');
+  unset($_COOKIE['ACCESS-user-is-logged-in']);
+}
+
+/**
+ * The ACCESS support portal uses a domain access module.  If this module
+ * is in use, we only want to set cookies for the 'access-support' 
+ * module.  
+ * 
+ * This function checks if the domain access module is in use, and 
+ * if so, returns FALSE if the current domain name is not 'access-support'.
+ * 
+ * Otherwise it returns true.
+ * 
+ * @return bool whether to proceed with the cookie logic in invoking code
+ * 
+ */
+function verify_domain() {
+
+  // Get current domain
+  $domain = \Drupal::config('domain.settings');
+
+  // if domain is null, simply return true.  we only want to check that the 
+  // current domain is 'access-support' if the domain access module is installed.
+
+  if ($domain == null) {
+    return true;
+  }
+  
+  // TODO - verify null return if domain access module not installed.
+  // Perhaps by trying to temporarily disable the domain module -- if not possible, use new drupal install.
+  // miles has a fresh drupal install
+
+  $token = \Drupal::token();
+  $domainName = t("[domain:name]");
+  $current_domain_name = Html::getClass($token->replace($domainName));
+
+  // $msg = basename(__FILE__) . ':' . __LINE__ . ' -- '
+  //   . 'in verify_domain(), current_domain_name = [' . $current_domain_name . ']';
+  // \Drupal::logger('seamless_cilogon')->debug($msg);
+  // \Drupal::messenger()->addStatus($msg);
+
+  // DURING DEVELOPMENT, return true
+  // TODO fix this for release
+  return true || $current_domain_name === 'access-support';
+}
