@@ -18,6 +18,8 @@ use Symfony\Component\HttpKernel\Event\RequestEvent;
  */
 class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
 
+  const seamlessCookieName = 'access_ci_sso';
+
   // TODO implement a constructor to initialize statics?
 
   /**
@@ -31,7 +33,13 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
       return;
     }
 
-    $cookie_exists = isset($_COOKIE['ACCESS-user-is-logged-in']);
+    $moduleHandler = \Drupal::service('module_handler');
+    if (!$moduleHandler->moduleExists('cilogon_auth')) {
+      return;
+    }
+
+    // 
+    $cookie_exists = isset($_COOKIE[self::seamlessCookieName]);
 
     // if cookie is set, redirect to CILogon flow
     // if no cookie, do nothing, just return

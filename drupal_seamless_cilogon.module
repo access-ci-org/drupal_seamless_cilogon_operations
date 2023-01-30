@@ -18,7 +18,7 @@
 
 
 use Drupal\Component\Utility\Html;
-
+use Drupal\drupal_seamless_cilogon\EventSubscriber\DrupalSeamlessCilogonEventSubscriber;
 
 /**
  * Implements hook_user_login().  If on a verified domain, set the "is-logged-in" cookie
@@ -41,8 +41,8 @@ function drupal_seamless_cilogon_user_login($args) {
 
   // set the cookie. 
   setcookie(
-    'ACCESS-user-is-logged-in', // name
-    "DOMAIN=$site_name", // value
+    DrupalSeamlessCilogonEventSubscriber::seamlessCookieName, 
+    "INITIAL_DOMAIN=$site_name", // value
     strtotime('+18 hours'), // expiration
     '/', // path
     $cookie_domain, // domain
@@ -58,8 +58,10 @@ function drupal_seamless_cilogon_user_logout($account) {
   }
 
   // Set cookie in the past and then remove it.
-  setcookie('ACCESS-user-is-logged-in', '', strtotime('-1 hour'), '/');
-  unset($_COOKIE['ACCESS-user-is-logged-in']);
+  setcookie(
+    DrupalSeamlessCilogonEventSubscriber::seamlessCookieName, 
+    '', strtotime('-1 hour'), '/');
+  unset($_COOKIE[DrupalSeamlessCilogonEventSubscriber::seamlessCookieName]);
 }
 
 /**
@@ -77,11 +79,16 @@ function drupal_seamless_cilogon_user_logout($account) {
  */
 function verify_domain() {
 
-  // Get current domain
+  $moduleHandler = \Drupal::service('module_handler');
+  if (!$moduleHandler->moduleExists('cilogon_auth')) {
+    return false;
+  }
+
+  // Get the current domain.
+  // If the domain is null, simply return true.  we only want to check that the 
+  // current domain is 'access-support' if the domain access module is installed.
   $domain = \Drupal::config('domain.settings');
 
-  // if domain is null, simply return true.  we only want to check that the 
-  // current domain is 'access-support' if the domain access module is installed.
 
   if ($domain == null) {
     return true;
