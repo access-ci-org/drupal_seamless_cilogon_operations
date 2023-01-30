@@ -1,5 +1,5 @@
 {
-  "name": "amp/drupal_seamless_cilogon",
+  "name": "access/drupal_seamless_cilogon",
   "type": "drupal-custom-module",
   "description": "Support login across multiple domains.",
   "keywords": ["Drupal"],
