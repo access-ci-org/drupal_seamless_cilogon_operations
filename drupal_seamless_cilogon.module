@@ -61,8 +61,7 @@ function drupal_seamless_cilogon_user_login($args)
     ? strtotime('+18 hours')  // default to +18 hours
     : strtotime($cookie_expiration);  // use value from form
   
-  // If site name ends with access-ci.org, set the cookie's domain to access-ci.org.
-  // Otherwise leave blank.
+  // Set the cookie domain (unless debugging)
   $cookie_domain = $seamless_debug ? null : 'access-ci.org';
 
   // set the cookie. 
@@ -97,7 +96,6 @@ function drupal_seamless_cilogon_user_logout($account)
     'drupal_seamless_cilogon.seamless_cookie_name',
     DrupalSeamlessCilogonEventSubscriber::seamlessCookieName
   );
-
 
   // Set cookie in the past and then remove it.
   setcookie(
