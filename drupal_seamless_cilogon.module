@@ -132,24 +132,14 @@ function drupal_seamless_cilogon_user_logout($account)
  */
 function verify_domain()
 {
-  // Verify the domain module is installed.  
+  // Verify the domain module is installed.  If not installed, 
+  // return true to proceed to CILogon.
   $moduleHandler = \Drupal::service('module_handler');
   if (!$moduleHandler->moduleExists('domain')) {
-    return false;
-  }
-
-  // Get the current domain.
-  // If the domain is null, simply return true.  we only want to check that the 
-  // current domain is 'access-support' if the domain access module is installed.
-  // TODO - verify null return if domain access module not installed,
-  // perhaps by trying to temporarily disable the domain module -- if not possible, use new drupal install.
-  // Miles has a fresh drupal install.
-  $domain = \Drupal::config('domain.settings');
-  if ($domain == null) {
     return true;
   }
 
-  $token = \Drupal::token();
+   $token = \Drupal::token();
   $domainName = t("[domain:name]");
   $current_domain_name = Html::getClass($token->replace($domainName));
 
