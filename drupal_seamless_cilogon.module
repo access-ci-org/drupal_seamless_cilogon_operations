@@ -19,6 +19,7 @@
 
 use Drupal\Component\Utility\Html;
 use Drupal\drupal_seamless_cilogon\EventSubscriber\DrupalSeamlessCilogonEventSubscriber;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Implements hook_user_login().  If on a verified domain, set the "is-logged-in" cookie
@@ -109,11 +110,19 @@ function drupal_seamless_cilogon_user_logout($account)
 
   $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', true);
   if ($seamless_debug) {
-    $msg =  __FUNCTION__ . "() - unset cookie, name = $cookie_name"
+    $msg =  __FUNCTION__ . "() - unset cookie with name = $cookie_name"
+      . ' -- ' . basename(__FILE__) . ':' . __LINE__ ;  
+    \Drupal::messenger()->addStatus($msg);
+    \Drupal::logger('seamless_cilogon')->debug($msg);
+
+    $msg =  __FUNCTION__ . "() - redirecting to cilogon.org/logout"
       . ' -- ' . basename(__FILE__) . ':' . __LINE__ ;  
     \Drupal::messenger()->addStatus($msg);
     \Drupal::logger('seamless_cilogon')->debug($msg);
   }
+
+  $redirect = new RedirectResponse("https://cilogon.org/logout/");
+  $redirect->send();
 }
 
 
