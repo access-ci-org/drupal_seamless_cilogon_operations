@@ -28,13 +28,11 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
  */
 function drupal_seamless_cilogon_user_login($args)
 {
-
-  $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', true);
-
   $domain_verified = verify_domain();
   
+  $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', true);
   if ($seamless_debug) {
-    $msg =  __FUNCTION__ . "() - domain_verified = " . print_r($domain_verified, true) 
+    $msg =  __FUNCTION__ . "() - domain_verified = " . ($domain_verified ? "true" : "false") 
       . ' -- ' . basename(__FILE__) . ':' . __LINE__ ;  
     \Drupal::messenger()->addStatus($msg);
     \Drupal::logger('seamless_cilogon')->debug($msg);
@@ -45,15 +43,14 @@ function drupal_seamless_cilogon_user_login($args)
     return;
   }
 
-  $site_name = \Drupal::config('system.site')->get('name');
-
   $cookie_name = \Drupal::state()->get(
     'drupal_seamless_cilogon.seamless_cookie_name',
     DrupalSeamlessCilogonEventSubscriber::seamlessCookieName
   );
 
   $cookie_value = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_value', null);
-  if (strlen($cookie_value) == 0) {
+  if (!$cookie_value || $cookie_value === "") {
+    $site_name = \Drupal::config('system.site')->get('name');
     $cookie_value =  "INITIAL_DOMAIN=$site_name";
   }
 
@@ -89,7 +86,18 @@ function drupal_seamless_cilogon_user_login($args)
  */
 function drupal_seamless_cilogon_user_logout($account)
 {
-  if (!verify_domain()) {
+  $domain_verified = verify_domain();
+
+  $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', true);
+  if ($seamless_debug) {
+    $msg =  __FUNCTION__ . "() - domain_verified = " . ($domain_verified ? "true" : "false") 
+      . ' -- ' . basename(__FILE__) . ':' . __LINE__ ;  
+    \Drupal::messenger()->addStatus($msg);
+    \Drupal::logger('seamless_cilogon')->debug($msg);
+  }
+
+  // only start this flow if we the domain is verified
+  if (!$domain_verified) {
     return;
   }
   
@@ -107,8 +115,6 @@ function drupal_seamless_cilogon_user_logout($account)
   );
   unset($_COOKIE[$cookie_name]);
 
-
-  $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', true);
   if ($seamless_debug) {
     $msg =  __FUNCTION__ . "() - unset cookie with name = $cookie_name"
       . ' -- ' . basename(__FILE__) . ':' . __LINE__ ;  
