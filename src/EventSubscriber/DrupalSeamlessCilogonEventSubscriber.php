@@ -22,26 +22,28 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
 
   /**
    * Event handler for KernelEvents::REQUEST events, specifically to support seamless login by
-   * checking if a non-authenticated user already has the seamless cilogon flow set.
+   * checking if a non-authenticated user already has already been through seamless login
+   * 
+   * Logic:
+   *  - if user already authenticated, just return
+   *  - if cilogon_auth module not installed, just return
+   *  - if the the seamless_cilogon cookie does not exist, just return
+   *  - otherwise, redirect to CILogon
    */
   public function onRequest(RequestEvent $event) {
-    $cookie_name = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_name', self::seamlessCookieName);
-
-    $cookie_exists = isset($_COOKIE[$cookie_name]);
 
     $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', true);
-    
-    if ($seamless_debug) {
-      $msg =  __FUNCTION__ . "() - \$_COOKIE[$cookie_name] = " 
-        . ($cookie_exists ? print_r($_COOKIE[$cookie_name], true) : ' <not set>')
-        . ' -- ' . basename(__FILE__) . ':' . __LINE__ ;  
-      \Drupal::messenger()->addStatus($msg);
-      \Drupal::logger('seamless_cilogon')->debug($msg);
-    }
-
 
     //  If the user is authenticated,no need to redirect to CILogin
     if (\Drupal::currentUser()->isAuthenticated()) {
+      
+      if ($seamless_debug) {
+        $msg =  __FUNCTION__ . "() - user already authenticated, no need to redirect, returning"
+          . ' -- ' . basename(__FILE__) . ':' . __LINE__ ;  
+        \Drupal::messenger()->addStatus($msg);
+        \Drupal::logger('seamless_cilogon')->debug($msg);
+      }
+
       return;
     }
 
@@ -49,6 +51,18 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
     $moduleHandler = \Drupal::service('module_handler');
     if (!$moduleHandler->moduleExists('cilogon_auth')) {
       return;
+    }
+
+    $cookie_name = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_name', self::seamlessCookieName);
+
+    $cookie_exists = isset($_COOKIE[$cookie_name]);
+
+    if ($seamless_debug) {
+      $msg =  __FUNCTION__ . "() - \$_COOKIE[$cookie_name] = " 
+        . ($cookie_exists ? print_r($_COOKIE[$cookie_name], true) : ' <not set>')
+        . ' -- ' . basename(__FILE__) . ':' . __LINE__ ;  
+      \Drupal::messenger()->addStatus($msg);
+      \Drupal::logger('seamless_cilogon')->debug($msg);
     }
 
     // if cookie is set, redirect to CILogon flow
@@ -78,15 +92,16 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
 
     $seamless_login_enabled = \Drupal::state()->get('drupal_seamless_cilogon.seamless_login_enabled', true);
     
-    if ($seamless_debug) {
-      $msg =  __FUNCTION__ . "() - cookie exists, redirecting to cilogon is "
-        . ($seamless_login_enabled ? "ENABLED" : "DISABLED")
-        . ' -- ' . basename(__FILE__) . ':' . __LINE__ ;  
-      \Drupal::messenger()->addStatus($msg);
-      \Drupal::logger('seamless_cilogon')->debug($msg);
-    }
-
     if ($seamless_login_enabled) {
+      
+      if ($seamless_debug) {
+        $msg =  __FUNCTION__ . "() - cookie exists, redirecting to cilogon is "
+          . ($seamless_login_enabled ? "ENABLED" : "DISABLED")
+          . ' -- ' . basename(__FILE__) . ':' . __LINE__ ;  
+        \Drupal::messenger()->addStatus($msg);
+        \Drupal::logger('seamless_cilogon')->debug($msg);
+      }
+
       $event->setResponse($response);
     }
   }
