@@ -17,6 +17,7 @@ class DrupalSeamlessCilogon extends FormBase
    */
   public function buildForm(array $form, FormStateInterface $form_state)
   {
+    $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', false);
 
     $seamless_login_enabled = \Drupal::state()->get('drupal_seamless_cilogon.seamless_login_enabled', true);
 
@@ -30,7 +31,6 @@ class DrupalSeamlessCilogon extends FormBase
 
     $cookie_expiration = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_expiration', '+18 hours');
 
-    $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', true);
 
     $form['seamless_login_enabled'] = [
       '#type' => 'checkbox',
