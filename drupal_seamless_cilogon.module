@@ -28,7 +28,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
  */
 function drupal_seamless_cilogon_user_login($args)
 {
-  $domain_verified = verify_domain();
+  $domain_verified = verify_domain_is_asp();
 
   $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', true);
   if ($seamless_debug) {
@@ -86,7 +86,7 @@ function drupal_seamless_cilogon_user_login($args)
  */
 function drupal_seamless_cilogon_user_logout($account)
 {
-  $domain_verified = verify_domain();
+  $domain_verified = verify_domain_is_asp();
 
   $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', true);
   if ($seamless_debug) {
@@ -127,7 +127,7 @@ function drupal_seamless_cilogon_user_logout($account)
     \Drupal::logger('seamless_cilogon')->debug($msg);
   }
 
-  $redirect = new RedirectResponse("https://cilogon.org/logout/");
+  $redirect = new RedirectResponse("https://cilogon.org/logout/?skin=access");
   $redirect->send();
 }
 
@@ -145,7 +145,7 @@ function drupal_seamless_cilogon_user_logout($account)
  * @return bool whether to proceed with the cookie logic in invoking code
  *
  */
-function verify_domain()
+function verify_domain_is_asp()
 {
   // Verify the domain module is installed.  If not installed,
   // return true to proceed to CILogon.
@@ -161,7 +161,7 @@ function verify_domain()
   $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', true);
   if ($seamless_debug) {
     $msg = basename(__FILE__) . ':' . __LINE__ . ' -- '
-      . 'in verify_domain(), current_domain_name = [' . $current_domain_name . ']';
+      . 'in verify_domain_is_asp(), current_domain_name = [' . $current_domain_name . ']';
     \Drupal::logger('seamless_cilogon')->debug($msg);
     \Drupal::messenger()->addStatus($msg);
   }
