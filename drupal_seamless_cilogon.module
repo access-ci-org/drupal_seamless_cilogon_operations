@@ -3,17 +3,17 @@
 /**
  * Module for seamless login.
  *
- * ACCESS sites would share logged in status via a session cookie that has access permissions 
- * for any subdomain under http://access-ci.org . This cookie would be set by any site upon 
- * successful login and could be cleared by any site on logout. Any ACCESS site would 
- * automatically begin the CiLogon process on first page load if this cookie is set. 
- * 
+ * ACCESS sites would share logged in status via a session cookie that has access permissions
+ * for any subdomain under http://access-ci.org . This cookie would be set by any site upon
+ * successful login and could be cleared by any site on logout. Any ACCESS site would
+ * automatically begin the CiLogon process on first page load if this cookie is set.
+ *
  * Document describing option selected by the IAM working group, option 3.2.3:
  *    https://drive.google.com/file/d/1lmzJ4gOQaeYg-RBl50pnl8BZGiJr7Fs9/view
- * 
- * This should be a new ACCESS module named drupal_seamless_cilogon in the 
+ *
+ * This should be a new ACCESS module named drupal_seamless_cilogon in the
  * repository https://github.com/access-ci-org/drupal_seamless_cilogon
- * 
+ *
  */
 
 
@@ -23,17 +23,17 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Implements hook_user_login().  If on a verified domain, set the "is-logged-in" cookie
- * with an 18 hour expiration.  Include the site name (for debugging purposes).  If 
+ * with an 18 hour expiration.  Include the site name (for debugging purposes).  If
  * on the access-ci.org domain, include that in the cookie as well.
  */
 function drupal_seamless_cilogon_user_login($args)
 {
   $domain_verified = verify_domain();
-  
+
   $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', true);
   if ($seamless_debug) {
-    $msg =  __FUNCTION__ . "() - domain_verified = " . ($domain_verified ? "true" : "false") 
-      . ' -- ' . basename(__FILE__) . ':' . __LINE__ ;  
+    $msg =  __FUNCTION__ . "() - domain_verified = " . ($domain_verified ? "true" : "false")
+      . ' -- ' . basename(__FILE__) . ':' . __LINE__ ;
     \Drupal::messenger()->addStatus($msg);
     \Drupal::logger('seamless_cilogon')->debug($msg);
   }
@@ -45,7 +45,7 @@ function drupal_seamless_cilogon_user_login($args)
 
   $cookie_name = \Drupal::state()->get(
     'drupal_seamless_cilogon.seamless_cookie_name',
-    DrupalSeamlessCilogonEventSubscriber::seamlessCookieName
+    DrupalSeamlessCilogonEventSubscriber::SEAMLESSCOOKIENAME
   );
 
   $cookie_value = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_value', null);
@@ -58,11 +58,11 @@ function drupal_seamless_cilogon_user_login($args)
   $cookie_expiration = strlen($cookie_expiration) == 0
     ? strtotime('+18 hours')  // default to +18 hours
     : strtotime($cookie_expiration);  // use value from form
-  
+
   // Set the cookie domain (unless debugging)
   $cookie_domain = $seamless_debug ? null : 'access-ci.org';
 
-  // set the cookie. 
+  // set the cookie.
   setcookie(
     $cookie_name,
     $cookie_value,
@@ -74,14 +74,14 @@ function drupal_seamless_cilogon_user_login($args)
   if ($seamless_debug) {
     $msg =  __FUNCTION__ . "() - set cookie, name = $cookie_name, value = $cookie_value, expiration = $cookie_expiration "
       . " = " . date("Y-m-d H:i:s", $cookie_expiration) . ", domain = $cookie_domain"
-      . ' -- ' . basename(__FILE__) . ':' . __LINE__ ;  
+      . ' -- ' . basename(__FILE__) . ':' . __LINE__ ;
     \Drupal::messenger()->addStatus($msg);
     \Drupal::logger('seamless_cilogon')->debug($msg);
   }
 }
 
 /**
- * Implements hook_user_logout().  When logging out from ACCESS Support, remove the cookie and 
+ * Implements hook_user_logout().  When logging out from ACCESS Support, remove the cookie and
  * redirect to https://cilogon.org/logout/.
  */
 function drupal_seamless_cilogon_user_logout($account)
@@ -90,8 +90,8 @@ function drupal_seamless_cilogon_user_logout($account)
 
   $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', true);
   if ($seamless_debug) {
-    $msg =  __FUNCTION__ . "() - domain_verified = " . ($domain_verified ? "true" : "false") 
-      . ' -- ' . basename(__FILE__) . ':' . __LINE__ ;  
+    $msg =  __FUNCTION__ . "() - domain_verified = " . ($domain_verified ? "true" : "false")
+      . ' -- ' . basename(__FILE__) . ':' . __LINE__ ;
     \Drupal::messenger()->addStatus($msg);
     \Drupal::logger('seamless_cilogon')->debug($msg);
   }
@@ -100,10 +100,10 @@ function drupal_seamless_cilogon_user_logout($account)
   if (!$domain_verified) {
     return;
   }
-  
+
   $cookie_name = \Drupal::state()->get(
     'drupal_seamless_cilogon.seamless_cookie_name',
-    DrupalSeamlessCilogonEventSubscriber::seamlessCookieName
+    DrupalSeamlessCilogonEventSubscriber::SEAMLESSCOOKIENAME
   );
 
   // Set cookie in the past and then remove it.
@@ -117,12 +117,12 @@ function drupal_seamless_cilogon_user_logout($account)
 
   if ($seamless_debug) {
     $msg =  __FUNCTION__ . "() - unset cookie with name = $cookie_name"
-      . ' -- ' . basename(__FILE__) . ':' . __LINE__ ;  
+      . ' -- ' . basename(__FILE__) . ':' . __LINE__ ;
     \Drupal::messenger()->addStatus($msg);
     \Drupal::logger('seamless_cilogon')->debug($msg);
 
     $msg =  __FUNCTION__ . "() - redirecting to cilogon.org/logout"
-      . ' -- ' . basename(__FILE__) . ':' . __LINE__ ;  
+      . ' -- ' . basename(__FILE__) . ':' . __LINE__ ;
     \Drupal::messenger()->addStatus($msg);
     \Drupal::logger('seamless_cilogon')->debug($msg);
   }
@@ -134,20 +134,20 @@ function drupal_seamless_cilogon_user_logout($account)
 
 /**
  * The ACCESS support portal uses the domain access module.  If this module
- * is in use, we only want to set cookies for the 'access-support' 
- * module.  
- * 
- * This function checks if the domain access module is in use, and 
+ * is in use, we only want to set cookies for the 'access-support'
+ * module.
+ *
+ * This function checks if the domain access module is in use, and
  * if so, returns FALSE if the current domain name is not 'access-support'.
- * 
+ *
  * Otherwise it returns true.
- * 
+ *
  * @return bool whether to proceed with the cookie logic in invoking code
- * 
+ *
  */
 function verify_domain()
 {
-  // Verify the domain module is installed.  If not installed, 
+  // Verify the domain module is installed.  If not installed,
   // return true to proceed to CILogon.
   $moduleHandler = \Drupal::service('module_handler');
   if (!$moduleHandler->moduleExists('domain')) {
