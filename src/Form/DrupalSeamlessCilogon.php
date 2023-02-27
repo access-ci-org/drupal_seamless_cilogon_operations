@@ -23,7 +23,7 @@ class DrupalSeamlessCilogon extends FormBase
 
     $cookie_name = \Drupal::state()->get(
       'drupal_seamless_cilogon.seamless_cookie_name',
-      DrupalSeamlessCilogonEventSubscriber::seamlessCookieName
+      DrupalSeamlessCilogonEventSubscriber::SEAMLESSCOOKIENAME
     );
 
     $site_name = \Drupal::config('system.site')->get('name');
@@ -45,7 +45,7 @@ class DrupalSeamlessCilogon extends FormBase
       '#maxlength' => 255,
       '#default_value' => $cookie_name,
       '#description' => $this->t("Name for the seamless login cookie.  Default value is " 
-        . DrupalSeamlessCilogonEventSubscriber::seamlessCookieName),
+        . DrupalSeamlessCilogonEventSubscriber::SEAMLESSCOOKIENAME),
       '#required' => false,
     ];
 
@@ -120,7 +120,7 @@ class DrupalSeamlessCilogon extends FormBase
       $seamless_login_enabled = \Drupal::state()->get('drupal_seamless_cilogon.seamless_login_enabled', true);
       $cookie_name = \Drupal::state()->get(
         'drupal_seamless_cilogon.seamless_cookie_name',
-        DrupalSeamlessCilogonEventSubscriber::seamlessCookieName
+        DrupalSeamlessCilogonEventSubscriber::SEAMLESSCOOKIENAME
       );
       $site_name = \Drupal::config('system.site')->get('name');
       $cookie_value = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_value', "INITIAL_DOMAIN=$site_name");
