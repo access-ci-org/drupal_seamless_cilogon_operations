@@ -91,8 +91,8 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
           $route_name !== 'user.login' && 
           $route_name !== 'cilogon_auth.redirect_controller_redirect' && 
           verify_domain_is_asp()) {
-        $redirect = new RedirectResponse("/user/logout/");
-        $event->setResponse($redirect->send());
+        // $redirect = new RedirectResponse("/user/logout/");
+        // $event->setResponse($redirect->send());
       }
 
       return;
