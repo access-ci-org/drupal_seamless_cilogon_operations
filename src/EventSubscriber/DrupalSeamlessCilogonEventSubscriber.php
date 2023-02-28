@@ -28,6 +28,14 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
    *  - otherwise, redirect to CILogon.
    */
   public function onRequest(RequestEvent $event) {
+    
+    // $route_name = \Drupal::routeMatch()->getRouteName();
+    // $msg = __FUNCTION__ . "() - just route = $route_name"
+    //   . ' -- ' . basename(__FILE__) . ':' . __LINE__;
+    // \Drupal::messenger()->addStatus($msg);
+    // \Drupal::logger('seamless_cilogon')->debug($msg);
+
+    // return;
 
     $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', TRUE);
 
@@ -61,6 +69,8 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
 
       $route_name = \Drupal::routeMatch()->getRouteName();
 
+      // kint($route_name);
+
       if ($seamless_debug) {
         $msg = __FUNCTION__ . "() - user already authenticated"
           . ' -- ' . basename(__FILE__) . ':' . __LINE__;
@@ -74,7 +84,11 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
       }
 
       // Unless cookie doesn't exist. In this case, logout.
-      if (!$cookie_exists && $route_name !== 'user.logout' && $route_name !== 'user.login' && verify_domain_is_asp()) {
+      if (!$cookie_exists && 
+          $route_name !== 'user.logout' && 
+          $route_name !== 'user.login' && 
+          $route_name !== 'cilogon_auth.redirect_controller_redirect' && 
+          verify_domain_is_asp()) {
         $redirect = new RedirectResponse("/user/logout/");
         $event->setResponse($redirect->send());
       }
