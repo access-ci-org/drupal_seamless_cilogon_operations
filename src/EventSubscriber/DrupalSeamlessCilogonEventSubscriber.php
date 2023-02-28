@@ -74,7 +74,7 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
       }
 
       // Unless cookie doesn't exist. In this case, logout.
-      if (!$cookie_exists && $route_name !== 'user.logout' && verify_domain_is_asp()) {
+      if (!$cookie_exists && $route_name !== 'user.logout' && $route_name !== 'user.login' && verify_domain_is_asp()) {
         $redirect = new RedirectResponse("/user/logout/");
         $event->setResponse($redirect->send());
       }
