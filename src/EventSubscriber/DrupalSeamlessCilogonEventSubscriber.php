@@ -54,7 +54,9 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
     }
 
     $cookie_name = \Drupal::state()->get('drupal_seamless_cilogon.seamlesscookiename', self::SEAMLESSCOOKIENAME);
-    $cookie_exists = NULL !== \Drupal::service('request_stack')->getCurrentRequest()->cookies->get($cookie_name);
+
+    // $cookie_exists = NULL !== \Drupal::service('request_stack')->getCurrentRequest()->cookies->get($cookie_name);
+    $cookie_exists = isset($_COOKIE[$cookie_name]);
 
     if ($seamless_debug) {
       $msg = __FUNCTION__ . "() - \$_COOKIE[$cookie_name] = "
