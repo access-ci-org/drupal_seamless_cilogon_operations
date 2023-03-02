@@ -60,7 +60,8 @@ function drupal_seamless_cilogon_user_login($args)
     : strtotime($cookie_expiration);  // use value from form
 
   // Set the cookie domain (unless debugging)
-  $cookie_domain = $seamless_debug ? '' : 'access-ci.org';
+  // $cookie_domain = $seamless_debug ? '' : 'access-ci.org';
+  $cookie_domain = '.access-ci.org';
 
   // set the cookie.
   setcookie(
