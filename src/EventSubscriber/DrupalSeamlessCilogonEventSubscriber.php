@@ -56,11 +56,15 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
     $cookie_name = \Drupal::state()->get('drupal_seamless_cilogon.seamlesscookiename', self::SEAMLESSCOOKIENAME);
 
     /*
-        on https://test.support.access-ci.org/user/login?destination=/front-projects-nect, i see cookie with value 1
+        on https://test.support.access-ci.org/user/login?destination=/front-projects-nect, i see cookie with value 1,
+        but the code below doesn't get it reliably
         onRequest() - $_COOKIE[access_ci_sso] = <not set> -- DrupalSeamlessCilogonEventSubscriber.php:64
+
+        trying various ways to read the cookie -- now manually setting it
+        in login hook
     */
-    $cookie_exists = NULL !== \Drupal::service('request_stack')->getCurrentRequest()->cookies->get($cookie_name);
-    // $cookie_exists = isset($_COOKIE[$cookie_name]);
+    // $cookie_exists = NULL !== \Drupal::service('request_stack')->getCurrentRequest()->cookies->get($cookie_name);
+    $cookie_exists = isset($_COOKIE[$cookie_name]);
 
     if ($seamless_debug) {
       $msg = __FUNCTION__ . "() - \$_COOKIE[$cookie_name] = "
@@ -83,8 +87,11 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
         \Drupal::messenger()->addStatus($msg);
         \Drupal::logger('seamless_cilogon')->debug($msg);
 
+        $timeofday=gettimeofday(); 
+        $timestamp = sprintf("%s.%06d", date('Y-m-d H:i:s', $timeofday['sec']), $timeofday['usec']);
+
         $msg = __FUNCTION__ . "() - route_name = $route_name"
-          . ' -- ' . basename(__FILE__) . ':' . __LINE__;
+          . ' -- ' . basename(__FILE__) . ':' . __LINE__ . ' ' . $timestamp;
         \Drupal::messenger()->addStatus($msg);
         \Drupal::logger('seamless_cilogon')->debug($msg);
       }
