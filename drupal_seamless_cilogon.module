@@ -60,8 +60,7 @@ function drupal_seamless_cilogon_user_login($args)
     : strtotime($cookie_expiration);  // use value from form
 
   // Set the cookie domain (unless debugging)
-  // $cookie_domain = $seamless_debug ? '' : 'access-ci.org';
-  $cookie_domain = '.access-ci.org';
+  $cookie_domain = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_domain', '.access-ci.org');
 
   // set the cookie.
   setcookie(
@@ -71,6 +70,9 @@ function drupal_seamless_cilogon_user_login($args)
     '/', // path
     $cookie_domain, // domain
   );
+
+  // manually set it also
+  $_COOKIE[$cookie_name] = $cookie_value;
 
   if ($seamless_debug) {
     $msg =  __FUNCTION__ . "() - set cookie, name = $cookie_name, value = $cookie_value, expiration = $cookie_expiration "
@@ -159,14 +161,17 @@ function verify_domain_is_asp()
   $domainName = t("[domain:name]");
   $current_domain_name = Html::getClass($token->replace($domainName));
 
+  $domain_verified = $current_domain_name === 'access-support';
+
   $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', true);
   if ($seamless_debug) {
     $msg = basename(__FILE__) . ':' . __LINE__ . ' -- '
-      . 'in verify_domain_is_asp(), current_domain_name = [' . $current_domain_name . ']';
+      . 'in current_domain_name = [' . $current_domain_name . '] so verify_domain() returns ' 
+      . ($domain_verified ? 'TRUE' : 'FALSE');
     \Drupal::logger('seamless_cilogon')->debug($msg);
     \Drupal::messenger()->addStatus($msg);
   }
 
   // return true if the current domain is 'access-support'
-  return $current_domain_name === 'access-support';
+  return $domain_verified;
 }
