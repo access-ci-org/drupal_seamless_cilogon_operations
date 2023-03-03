@@ -28,7 +28,7 @@ class DrupalSeamlessCilogon extends FormBase
 
     $site_name = \Drupal::config('system.site')->get('name');
     $cookie_value = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_value', "INITIAL_DOMAIN=$site_name");
-
+    $cookie_domain = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_domain', '.access-ci.org');
     $cookie_expiration = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_expiration', '+18 hours');
 
 
@@ -56,6 +56,14 @@ class DrupalSeamlessCilogon extends FormBase
       '#default_value' => $cookie_value,
       '#description' => $this->t("Value for the cookie."),
       '#required' => false,
+    ];
+
+    $form['seamless_cookie_domain'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Cookie domain'),
+      '#maxlength' => 255,
+      '#default_value' => $cookie_domain,
+      '#description' => $this->t('domain for cookie - default is ".access-ci.org"'),
     ];
 
     $form['seamless_cookie_expiration'] = [
@@ -110,6 +118,7 @@ class DrupalSeamlessCilogon extends FormBase
     \Drupal::state()->set('drupal_seamless_cilogon.seamless_login_enabled', $form_state->getValue('seamless_login_enabled'));
     \Drupal::state()->set('drupal_seamless_cilogon.seamless_cookie_name', $form_state->getValue('seamless_cookie_name'));
     \Drupal::state()->set('drupal_seamless_cilogon.seamless_cookie_value', $form_state->getValue('seamless_cookie_value'));
+    \Drupal::state()->set('drupal_seamless_cilogon.seamless_cookie_domain', $form_state->getValue('seamless_cookie_domain'));
     \Drupal::state()->set('drupal_seamless_cilogon.seamless_cookie_expiration', $form_state->getValue('seamless_cookie_expiration'));
 
     $seamless_debug = $form_state->getValue('seamless_cookie_debug');
@@ -125,9 +134,10 @@ class DrupalSeamlessCilogon extends FormBase
       $site_name = \Drupal::config('system.site')->get('name');
       $cookie_value = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_value', "INITIAL_DOMAIN=$site_name");
       $cookie_expiration = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_expiration', '+18 hours');
+      $cookie_domain = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_domain', '.access-ci.org');
       $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', true);
 
-      $msg =  __FUNCTION__ . "(): seamless_login_enabled=$seamless_login_enabled cookie_name=$cookie_name cookie_value=$cookie_value cookie_expiration=$cookie_expiration seamless_debug=$seamless_debug"
+      $msg =  __FUNCTION__ . "(): seamless_login_enabled=$seamless_login_enabled cookie_name=$cookie_name cookie_value=$cookie_value cookie_domain=$cookie_domain cookie_expiration=$cookie_expiration seamless_debug=$seamless_debug"
         . ' -- ' . basename(__FILE__) . ':' . __LINE__ ;  
       \Drupal::messenger()->addStatus($msg);
       \Drupal::logger('seamless_cilogon')->debug($msg);
