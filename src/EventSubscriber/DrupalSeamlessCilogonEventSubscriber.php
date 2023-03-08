@@ -19,7 +19,7 @@ use Drupal\Core\Url;
  */
 class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
 
-  const SEAMLESSCOOKIENAME = 'SESSaccesscisso';
+  const SEAMLESSCOOKIENAME = 'access_ci_sso';
 
   // /**
   //  * Drupal\Core\Config\ConfigFactoryInterface definition.
@@ -159,8 +159,13 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
           \Drupal::messenger()->addStatus($msg);
           \Drupal::logger('seamless_cilogon')->debug($msg);
         }
-        $redirect = new RedirectResponse("/user/logout/");
-        $event->setResponse($redirect->send());
+
+        $destination = "/user/logout/";
+        $redir = new TrustedRedirectResponse($destination, '302');
+        $redir->headers->set('Cache-Control', 'public, max-age=0');
+        $redir->addCacheableDependency($destination);
+        $event->setResponse($redir);
+
       }
       return;
     }
@@ -172,6 +177,7 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
   }
 
   /**
+   * Add the cookie, via a redirect
    * 
    * @param \Symfony\Component\HttpKernel\Event\RequestEvent $event
    *   Response event.
@@ -214,6 +220,7 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
   }
 
   /**
+   * Redirect to Cilogon 
    * 
    * @param \Symfony\Component\HttpKernel\Event\RequestEvent $event
    *   Response event.
@@ -236,9 +243,7 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
     // Another documented way is to call the killSwitch in your code:
 
     \Drupal::service('page_cache_kill_switch')->trigger();
-    // bypass rest of code
-    // return;
-
+    
     // Setup redirect to CILogon flow.
     // @todo could any of the following be moved to a constructor for this class?
     $container = \Drupal::getContainer();
