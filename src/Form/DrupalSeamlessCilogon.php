@@ -21,16 +21,18 @@ class DrupalSeamlessCilogon extends FormBase
 
     $seamless_login_enabled = \Drupal::state()->get('drupal_seamless_cilogon.seamless_login_enabled', true);
 
-    $cookie_name = \Drupal::state()->get(
-      'drupal_seamless_cilogon.seamless_cookie_name',
-      DrupalSeamlessCilogonEventSubscriber::SEAMLESSCOOKIENAME
-    );
+    // coookie name must start with SESS and have no underscores.  
+    // So it is hardcoded in the event subscriber.  So removed following from config.
+    //
+    // $cookie_name = \Drupal::state()->get(
+    //   'drupal_seamless_cilogon.seamless_cookie_name',
+    //   DrupalSeamlessCilogonEventSubscriber::SEAMLESSCOOKIENAME
+    // );
 
-    $site_name = \Drupal::config('system.site')->get('name');
-    $cookie_value = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_value', "INITIAL_DOMAIN=$site_name");
-    $cookie_domain = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_domain', '.access-ci.org');
-    $cookie_expiration = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_expiration', '+18 hours');
-
+    // $site_name = \Drupal::config('system.site')->get('name');
+    // $cookie_value = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_value', "INITIAL_DOMAIN=$site_name");
+    // $cookie_domain = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_domain', '.access-ci.org');
+    // $cookie_expiration = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_expiration', '+18 hours');
 
     $form['seamless_login_enabled'] = [
       '#type' => 'checkbox',
