@@ -186,8 +186,7 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
   protected function doSetCookie(RequestEvent $event, $seamless_debug, $cookie_name) {
 
     $site_name = \Drupal::config('system.site')->get('name');
-    $cookie_value = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_value', 
-      "INITIAL_DOMAIN=$site_name");
+    $cookie_value = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_value', $site_name);
 
     $cookie_expiration = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_expiration', '+18 hours');
     $cookie_expiration = strtotime($cookie_expiration);  // use value from form
