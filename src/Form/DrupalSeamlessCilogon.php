@@ -29,10 +29,10 @@ class DrupalSeamlessCilogon extends FormBase
     //   DrupalSeamlessCilogonEventSubscriber::SEAMLESSCOOKIENAME
     // );
 
-    // $site_name = \Drupal::config('system.site')->get('name');
-    // $cookie_value = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_value', "INITIAL_DOMAIN=$site_name");
-    // $cookie_domain = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_domain', '.access-ci.org');
-    // $cookie_expiration = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_expiration', '+18 hours');
+    $site_name = \Drupal::config('system.site')->get('name');
+    $cookie_value = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_value', $site_name);
+    $cookie_domain = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_domain', '.access-ci.org');
+    $cookie_expiration = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_expiration', '+18 hours');
 
     $form['seamless_login_enabled'] = [
       '#type' => 'checkbox',
@@ -41,15 +41,15 @@ class DrupalSeamlessCilogon extends FormBase
       '#default_value' => $seamless_login_enabled,
     ];
 
-    $form['seamless_cookie_name'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Seamless CILogin - cookie name'),
-      '#maxlength' => 255,
-      '#default_value' => $cookie_name,
-      '#description' => $this->t("Name for the seamless login cookie.  Default value is " 
-        . DrupalSeamlessCilogonEventSubscriber::SEAMLESSCOOKIENAME),
-      '#required' => false,
-    ];
+    // $form['seamless_cookie_name'] = [
+    //   '#type' => 'textfield',
+    //   '#title' => $this->t('Seamless CILogin - cookie name'),
+    //   '#maxlength' => 255,
+    //   '#default_value' => $cookie_name,
+    //   '#description' => $this->t("Name for the seamless login cookie.  Default value is " 
+    //     . DrupalSeamlessCilogonEventSubscriber::SEAMLESSCOOKIENAME),
+    //   '#required' => false,
+    // ];
 
     $form['seamless_cookie_value'] = [
       '#type' => 'textfield',
