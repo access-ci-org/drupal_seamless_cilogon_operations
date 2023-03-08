@@ -5,102 +5,38 @@ namespace Drupal\drupal_seamless_cilogon\EventSubscriber;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Cookie;
-use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Routing\TrustedRedirectResponse;
-use Drupal\Core\Routing\CurrentRouteMatch;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Url;
 
 /**
  * Event Subscriber DrupalSeamlessCilogonEventSubscriber.
  */
 class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
 
-  // const SEAMLESSCOOKIENAME = 'access_ci_sso';
+  // for pantheon, cookie name must follow pattern S+ESS[a-z0-9]+
+  // (see https://docs.pantheon.io/cookies#cache-busting-cookies)
   const SEAMLESSCOOKIENAME = 'SESSaccesscisso';
-
-  // /**
-  //  * Drupal\Core\Config\ConfigFactoryInterface definition.
-  //  *
-  //  * @var Drupal\Core\Config\ConfigFactoryInterface
-  //  */
-  // protected $configFactory;
-
-  // /**
-  //  * The current route match.
-  //  *
-  //  * @var \Drupal\Core\Routing\CurrentRouteMatch
-  //  */
-  // protected $currentRouteMatch;
-
-  // /**
-  //  * The page cache kill switch.
-  //  *
-  //  * @var Drupal\Core\PageCache\ResponsePolicy\KillSwitch
-  //  */
-  // protected $killSwitch;
-
-  // /**
-  //  * {@inheritdoc}
-  //  */
-  // public function __construct(ConfigFactoryInterface $config_factory, CurrentRouteMatch $current_route_match, KillSwitch $kill_switch) {
-  //   $this->configFactory = $config_factory;
-  //   $this->currentRouteMatch = $current_route_match;
-  //   $this->killSwitch = $kill_switch;
-  // }
-
-  // /**
-  //  * {@inheritdoc}
-  //  */
-  // public static function create(ContainerInterface $container) {
-  //   return new static(
-  //     $container->get('config.factory'),
-  //     $container->get('current_route_match')
-  //   );
-  // }
-
-
-
 
   /**
    * Event handler for KernelEvents::REQUEST events, specifically to support
    * seamless login by checking if a non-authenticated user already has already
    * been through seamless login.
-   *
-   * Logic:
-   *  - if user already authenticated and if there is no cookie, logout.
-   *    They must have logged out on another ACCESS subdomain. 
-   *    Otherwise return.
-   *  - if cilogon_auth module not installed, just return
-   *  - if the the seamless_cilogon cookie does not exist, just return
-   *  - otherwise, redirect to CILogon.
-   * 
-   * 
    */
   public function onRequest(RequestEvent $event) {
 
-    // TODO consider this:
-    // this url includes the following:
-    // https://drupal.stackexchange.com/questions/274485/cant-find-cookie-for-validation-in-eventsubscriber
-    // they also user a constructor and changes to service.yml to set the class member routeMatch 
-    // if (!$this->routeMatch->getRouteName() == 'entity.node.canonical') {
-    //   return;
-    // }
-
-
-    $is_master_event = $event->isMasterRequest();
-    $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', TRUE);
-    $seamless_login_enabled = \Drupal::state()->get('drupal_seamless_cilogon.seamless_login_enabled', TRUE);
-    $domain_verified = verify_domain_is_asp();
-    $route_name = \Drupal::routeMatch()->getRouteName();
-
-    if (!$domain_verified || !$seamless_login_enabled || !$is_master_event) {
+    if ( !$event->isMasterRequest()) {
       return;
     }
 
+    if (!verify_domain_is_asp()) {
+      return;
+    }
+
+    $seamless_login_enabled = \Drupal::state()->get('drupal_seamless_cilogon.seamless_login_enabled', TRUE);
+    if (!$seamless_login_enabled) {
+      return;
+    }
+    
     // Don't attempt to redirect if the cilogon_auth module is not installed.
     $moduleHandler = \Drupal::service('module_handler');
     if (!$moduleHandler->moduleExists('cilogon_auth')) {
@@ -108,18 +44,13 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
     }
 
     $user_is_authenticated = \Drupal::currentUser()->isAuthenticated();
-    
-    $cookie_name = 'SESSaccesscisso'; //\Drupal::state()->get('drupal_seamless_cilogon.seamlesscookiename', self::SEAMLESSCOOKIENAME);
-    // which way is best to check for cookie?
+    $route_name = \Drupal::routeMatch()->getRouteName();
+    $cookie_name = self::SEAMLESSCOOKIENAME;
     $cookie_exists = NULL !== \Drupal::service('request_stack')->getCurrentRequest()->cookies->get($cookie_name);
-    // $cookie_exists = isset($_COOKIE[$cookie_name]);
+    $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', TRUE);
 
     if ($seamless_debug) {
-      $msg = __FUNCTION__ . "() ------- redirect to cilogon is "
-        . ($seamless_login_enabled ? "ENABLED" : "DISABLED")
-        . ', is_master_event = ' . ($is_master_event ? "TRUE" : "FALSE")
-        . ", routename = $route_name"
-        . ", domain_verified = " . ($domain_verified ? "TRUE" : "FALSE")
+      $msg = __FUNCTION__ . "() ------- route_name = $route_name"
         . ", user_is_authenticated = " . ($user_is_authenticated ? "TRUE" : "FALSE")
         . ", \$_COOKIE[$cookie_name] "
         . ($cookie_exists ? ('*exists* (with value ' . print_r($_COOKIE[$cookie_name], TRUE) . ')') : ' <not set>')
@@ -130,33 +61,23 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
 
     // if coming back from cilogon, set the cookie
     if ($route_name === 'cilogon_auth.redirect_controller_redirect') {
-      if (!$cookie_exists) {  // TODO necessary?  could cookie ever exist?
+      if (!$cookie_exists) { 
         $this->doSetCookie($event, $seamless_debug, $cookie_name);
       }
       return;
     } 
-
 
     // If the user is authenticated, no need to redirect to CILogin, unless cookie doesn't exist, in 
     // which case, logout
     if ($user_is_authenticated) {
       // Unless cookie doesn't exist. In this case, logout.
       if (!$cookie_exists && 
-          // TODO  -- necessary??
           $route_name !== 'user.logout' && 
           $route_name !== 'user.login') {
             
         if ($seamless_debug) {
-          $msg = __FUNCTION__ . "() - user authenticated but no cookie found"
+          $msg = __FUNCTION__ . "() - user authenticated but no cookie found, so redirect to /user/logout"
             . ' -- ' . basename(__FILE__) . ':' . __LINE__;
-          \Drupal::messenger()->addStatus($msg);
-          \Drupal::logger('seamless_cilogon')->debug($msg);
-
-          $timeofday=gettimeofday(); 
-          $timestamp = sprintf("%s.%06d", date('Y-m-d H:i:s', $timeofday['sec']), $timeofday['usec']);
-
-          $msg = __FUNCTION__ . "() - route_name = $route_name, LOGOUT"
-            . ' -- ' . basename(__FILE__) . ':' . __LINE__ . ' ' . $timestamp;
           \Drupal::messenger()->addStatus($msg);
           \Drupal::logger('seamless_cilogon')->debug($msg);
         }
@@ -188,20 +109,22 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
 
     $site_name = \Drupal::config('system.site')->get('name');
     $cookie_value = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_value', $site_name);
-
     $cookie_expiration = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_expiration', '+18 hours');
     $cookie_expiration = strtotime($cookie_expiration);  // use value from form
     $cookie_domain = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_domain', '.access-ci.org');
-
     $cookie = new Cookie($cookie_name, $cookie_value, $cookie_expiration, '/', $cookie_domain);
 
     $request = $event->getRequest();
     $destination = $request->getRequestUri();
 
-    // TODO -- confirm this
+    // TODO -- consider following
+    // "MUST use service to turn of Internal Page Cache,
+    // or else anonymous users will not ever be able to reach source page."
+    // $this->killSwitch->trigger();
+    // from https://www.drupal.org/project/adv_varnish/issues/3127566:
+    // Another documented way is to call the killSwitch in your code:
     \Drupal::service('page_cache_kill_switch')->trigger();
-
-    // TODO -- need the trusted redirect?  or see pattern in doRedirectToCilogon()
+    
     $redir = new TrustedRedirectResponse($destination, '302');
     $redir->headers->setCookie($cookie);
     $redir->headers->set('Cache-Control', 'public, max-age=0');
@@ -229,23 +152,20 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
   protected function doRedirectToCilogon(RequestEvent $event, $seamless_debug) {
 
     $request = $event->getRequest();
+
+    // TODO make use of the destination somehow?  for after return from redirect?
     $destination = $request->getRequestUri();
 
     // TODO -- consider following
-    //
-    // MUST use service to turn of Internal Page Cache,
-    // or else anonymous users will not ever be able to reach source page.
-
-    // not sure about this
+    // "MUST use service to turn of Internal Page Cache,
+    // or else anonymous users will not ever be able to reach source page."
     // $this->killSwitch->trigger();
-
     // from https://www.drupal.org/project/adv_varnish/issues/3127566:
     // Another documented way is to call the killSwitch in your code:
-
     \Drupal::service('page_cache_kill_switch')->trigger();
     
     // Setup redirect to CILogon flow.
-    // @todo could any of the following be moved to a constructor for this class?
+    // TODO - move some of the following be moved to a constructor for this class?
     $container = \Drupal::getContainer();
     $client_name = 'cilogon';
     $config_name = 'cilogon_auth.settings.' . $client_name;
@@ -279,13 +199,7 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
    * {@inheritdoc}
    */
   public static function getSubscribedEvents() {
-
-    // return [KernelEvents::REQUEST => 'onRequest'];
-
-    // splash-redirect does this this way:
     $events[KernelEvents::REQUEST][] = ['onRequest', 31];
     return $events;
-
   }
-
 }
