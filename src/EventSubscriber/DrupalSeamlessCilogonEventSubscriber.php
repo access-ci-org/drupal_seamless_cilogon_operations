@@ -109,7 +109,7 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
 
     $user_is_authenticated = \Drupal::currentUser()->isAuthenticated();
     
-    $cookie_name = \Drupal::state()->get('drupal_seamless_cilogon.seamlesscookiename', self::SEAMLESSCOOKIENAME);
+    $cookie_name = 'SESSaccesscisso'; //\Drupal::state()->get('drupal_seamless_cilogon.seamlesscookiename', self::SEAMLESSCOOKIENAME);
     // which way is best to check for cookie?
     $cookie_exists = NULL !== \Drupal::service('request_stack')->getCurrentRequest()->cookies->get($cookie_name);
     // $cookie_exists = isset($_COOKIE[$cookie_name]);
