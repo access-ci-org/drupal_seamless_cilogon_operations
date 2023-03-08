@@ -20,7 +20,7 @@ use Drupal\Core\Url;
 class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
 
   // const SEAMLESSCOOKIENAME = 'access_ci_sso';
-  const SEAMLESSCOOKIENAME = '  SESSaccesscisso';
+  const SEAMLESSCOOKIENAME = 'SESSaccesscisso';
 
   // /**
   //  * Drupal\Core\Config\ConfigFactoryInterface definition.
