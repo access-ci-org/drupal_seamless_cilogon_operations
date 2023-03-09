@@ -15,7 +15,7 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
 
   // for pantheon, cookie name must follow pattern S+ESS[a-z0-9]+
   // (see https://docs.pantheon.io/cookies#cache-busting-cookies)
-  const SEAMLESSCOOKIENAME = 'SESSaccesscisso';
+  const SEAMLESSCOOKIENAME = 'STYXKEY_access'; //'SESSaccesscisso';
 
   /**
    * Event handler for KernelEvents::REQUEST events, specifically to support
