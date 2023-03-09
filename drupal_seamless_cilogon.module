@@ -30,12 +30,13 @@ function drupal_seamless_cilogon_user_logout($account)
 {
   $domain_verified = verify_domain_is_asp();
 
-  $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', true);
+  $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', false);
   if ($seamless_debug) {
     $msg =  __FUNCTION__ . "() - domain_verified = " . ($domain_verified ? "true" : "false")
       . ' -- ' . basename(__FILE__) . ':' . __LINE__ ;
     \Drupal::messenger()->addStatus($msg);
     \Drupal::logger('seamless_cilogon')->debug($msg);
+    error_log('seamless: ' . $msg);
   }
 
   // only start this flow if we the domain is verified
@@ -43,30 +44,21 @@ function drupal_seamless_cilogon_user_logout($account)
     return;
   }
 
-  $cookie_name = \Drupal::state()->get(
-    'drupal_seamless_cilogon.seamless_cookie_name',
-    DrupalSeamlessCilogonEventSubscriber::SEAMLESSCOOKIENAME
-  );
+  $cookie_name = DrupalSeamlessCilogonEventSubscriber::SEAMLESSCOOKIENAME;
+  $cookie_value = '';
+  $cookie_expiration = strtotime('-1 hour'); 
+  $cookie_domain = '';
 
   // Set cookie in the past and then remove it.
-  setcookie(
-    $cookie_name,
-    '',
-    strtotime('-1 hour'),
-    '/'
-  );
+  setcookie($cookie_name, $cookie_value, $cookie_expiration, '/', $cookie_domain);
   unset($_COOKIE[$cookie_name]);
 
   if ($seamless_debug) {
-    $msg =  __FUNCTION__ . "() - unset cookie with name = $cookie_name"
+    $msg =  __FUNCTION__ . "() - unset cookie with name = $cookie_name - redirecting to cilogon.org/logout"
       . ' -- ' . basename(__FILE__) . ':' . __LINE__ ;
     \Drupal::messenger()->addStatus($msg);
     \Drupal::logger('seamless_cilogon')->debug($msg);
-
-    $msg =  __FUNCTION__ . "() - redirecting to cilogon.org/logout"
-      . ' -- ' . basename(__FILE__) . ':' . __LINE__ ;
-    \Drupal::messenger()->addStatus($msg);
-    \Drupal::logger('seamless_cilogon')->debug($msg);
+    error_log('seamless: ' . $msg);
   }
 
   $redirect = new RedirectResponse("https://cilogon.org/logout/?skin=access");
@@ -102,7 +94,7 @@ function verify_domain_is_asp()
 
   $domain_verified = $current_domain_name === 'access-support';
 
-  $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', true);
+  $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', false);
   if ($seamless_debug) {
     $msg = basename(__FILE__) . ':' . __LINE__ . ' -- '
       . 'current_domain_name = [' . $current_domain_name . '] so verify_domain() returns ' 
