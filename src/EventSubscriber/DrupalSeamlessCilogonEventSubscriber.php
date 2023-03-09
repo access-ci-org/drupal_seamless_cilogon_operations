@@ -2,8 +2,8 @@
 
 namespace Drupal\drupal_seamless_cilogon\EventSubscriber;
 
-use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpFoundation\Cookie;
 use Drupal\Core\Routing\TrustedRedirectResponse;
@@ -47,7 +47,7 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
     $route_name = \Drupal::routeMatch()->getRouteName();
     $cookie_name = self::SEAMLESSCOOKIENAME;
     $cookie_exists = NULL !== \Drupal::service('request_stack')->getCurrentRequest()->cookies->get($cookie_name);
-    $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', TRUE);
+    $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', false);
 
     if ($seamless_debug) {
       $msg = __FUNCTION__ . "() ------- route_name = $route_name"
@@ -57,6 +57,7 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
         . ' -- ' . basename(__FILE__) . ':' . __LINE__;
       \Drupal::messenger()->addStatus($msg);
       \Drupal::logger('seamless_cilogon')->debug($msg);
+      error_log('seamless: ' . $msg);
     }
 
     // if coming back from cilogon, set the cookie
