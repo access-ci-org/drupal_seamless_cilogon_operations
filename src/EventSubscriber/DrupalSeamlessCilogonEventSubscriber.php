@@ -170,7 +170,8 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
     unset($_COOKIE[$cookie_name]);
 
     $request = $event->getRequest();
-    $destination = 'https://cilogon.org/logout/?skin=access'; // $request->getRequestUri();
+    // $destination = 'https://cilogon.org/logout/?skin=access'; 
+    $destination = $request->getRequestUri();
 
     // TODO -- consider following
     // "MUST use service to turn of Internal Page Cache,
