@@ -118,7 +118,8 @@ class DrupalSeamlessCilogon extends FormBase
   public function doSaveSeamlessSettings(array &$form, FormStateInterface $form_state)
   {
     \Drupal::state()->set('drupal_seamless_cilogon.seamless_login_enabled', $form_state->getValue('seamless_login_enabled'));
-    \Drupal::state()->set('drupal_seamless_cilogon.seamless_cookie_name', $form_state->getValue('seamless_cookie_name'));
+    // removed cookie name from config -- see comments
+    // \Drupal::state()->set('drupal_seamless_cilogon.seamless_cookie_name', $form_state->getValue('seamless_cookie_name'));
     \Drupal::state()->set('drupal_seamless_cilogon.seamless_cookie_value', $form_state->getValue('seamless_cookie_value'));
     \Drupal::state()->set('drupal_seamless_cilogon.seamless_cookie_domain', $form_state->getValue('seamless_cookie_domain'));
     \Drupal::state()->set('drupal_seamless_cilogon.seamless_cookie_expiration', $form_state->getValue('seamless_cookie_expiration'));
@@ -134,7 +135,7 @@ class DrupalSeamlessCilogon extends FormBase
         DrupalSeamlessCilogonEventSubscriber::SEAMLESSCOOKIENAME
       );
       $site_name = \Drupal::config('system.site')->get('name');
-      $cookie_value = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_value', "INITIAL_DOMAIN=$site_name");
+      $cookie_value = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_value', $site_name);
       $cookie_expiration = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_expiration', '+18 hours');
       $cookie_domain = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_domain', '.access-ci.org');
       $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', false);
