@@ -10,7 +10,7 @@ use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpFoundation\Cookie;
 
 /**
- * Event Subscriber DrupalSeamlessCilogonEventSubscriber.
+ * Event Subscriber DrupalSeamlessCilogonEventSubscriber
  */
 class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
 {
@@ -59,7 +59,6 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
         . ($cookie_exists ? ('*exists* (with value ' . print_r($_COOKIE[$cookie_name], TRUE) . ')') : ' <not set>')
         . ' -- ' . basename(__FILE__) . ':' . __LINE__;
       \Drupal::messenger()->addStatus($msg);
-      \Drupal::logger('seamless_cilogon')->debug($msg);
       error_log('seamless: ' . $msg);
     }
 
@@ -79,7 +78,7 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
       return;
     }
 
-    // If the user is authenticated, no need to redirect to CILogin, unless cookie doesn't exist, in 
+    // If the user is authenticated, no need to redirect to CILogon, unless cookie doesn't exist, in 
     // which case, logout
     if ($user_is_authenticated) {
       // Unless cookie doesn't exist. In this case, logout.
@@ -88,14 +87,6 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
         $route_name !== 'user.logout' &&
         $route_name !== 'user.login'
       ) {
-
-        if ($seamless_debug) {
-          $msg = __FUNCTION__ . "() - user authenticated but no cookie found, so redirect to /user/logout"
-            . ' -- ' . basename(__FILE__) . ':' . __LINE__;
-          \Drupal::messenger()->addStatus($msg);
-          \Drupal::logger('seamless_cilogon')->debug($msg);
-        }
-
         $destination = "/user/logout/";
         $redir = new TrustedRedirectResponse($destination, '302');
         $redir->headers->set('Cache-Control', 'public, max-age=0');
@@ -137,7 +128,9 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
     // $this->killSwitch->trigger();
     // from https://www.drupal.org/project/adv_varnish/issues/3127566:
     // Another documented way is to call the killSwitch in your code:
-    \Drupal::service('page_cache_kill_switch')->trigger();
+    //  
+    // commenting this out to see unnecessary
+    // \Drupal::service('page_cache_kill_switch')->trigger();
 
     $redir = new TrustedRedirectResponse($destination, '302');
     $redir->headers->setCookie($cookie);
@@ -152,7 +145,6 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
         . " = " . date("Y-m-d H:i:s", $cookie_expiration) . ", domain = $cookie_domain"
         . ' -- ' . basename(__FILE__) . ':' . __LINE__;
       \Drupal::messenger()->addStatus($msg);
-      \Drupal::logger('seamless_cilogon')->debug($msg);
     }
   }
 
@@ -174,17 +166,9 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
     setcookie($cookie_name, $cookie_value, $cookie_expiration, '/', $cookie_domain);
     unset($_COOKIE[$cookie_name]);
 
-    // $request = $event->getRequest();
     $destination = 'https://cilogon.org/logout/?skin=access';
-    // $destination = $request->getRequestUri();
 
-    // TODO -- consider following
-    // "MUST use service to turn of Internal Page Cache,
-    // or else anonymous users will not ever be able to reach source page."
-    // $this->killSwitch->trigger();
-    // from https://www.drupal.org/project/adv_varnish/issues/3127566:
-    // Another documented way is to call the killSwitch in your code:
-    \Drupal::service('page_cache_kill_switch')->trigger();
+    // \Drupal::service('page_cache_kill_switch')->trigger();
 
     $redir = new TrustedRedirectResponse($destination, '302');
     $redir->headers->set('Cache-Control', 'public, max-age=0');
@@ -196,7 +180,6 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
       $msg =  __FUNCTION__ . "() - destination = $destination ---- unset cookie"
         . ' -- ' . basename(__FILE__) . ':' . __LINE__;
       \Drupal::messenger()->addStatus($msg);
-      \Drupal::logger('seamless_cilogon')->debug($msg);
       error_log('seamless: ' . $msg);
     }
   }
@@ -212,13 +195,7 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
   {
     $request = $event->getRequest();
 
-    // TODO -- consider following
-    // "MUST use service to turn of Internal Page Cache,
-    // or else anonymous users will not ever be able to reach source page."
-    // $this->killSwitch->trigger();
-    // from https://www.drupal.org/project/adv_varnish/issues/3127566:
-    // Another documented way is to call the killSwitch in your code:
-    \Drupal::service('page_cache_kill_switch')->trigger();
+    // \Drupal::service('page_cache_kill_switch')->trigger();
 
     // Setup redirect to CILogon flow.
     // TODO - move some of the following to a constructor for this class?
@@ -238,17 +215,12 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
     $response = $client->authorize($scopes);
     $response->headers->set('Cache-Control', 'public, max-age=0');
 
-    // TODO -- need something like following??
-    // $response->addCacheableDependency($destination);
-    // $response->addCacheableDependency($cookie);
-
     $event->setResponse($response);
 
     if ($seamless_debug) {
       $msg =  __FUNCTION__ . "() - destination = $destination ---- "
         . ' -- ' . basename(__FILE__) . ':' . __LINE__;
       \Drupal::messenger()->addStatus($msg);
-      \Drupal::logger('seamless_cilogon')->debug($msg);
     }
   }
 
@@ -286,7 +258,6 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
       $msg =  __FUNCTION__ . "() - current_domain_name = [" . $current_domain_name
         . '] so verify_domain_is_asp() returns ' . ($domain_verified ? 'TRUE' : 'FALSE')
         . ' -- ' . basename(__FILE__) . ':' . __LINE__;
-      \Drupal::logger('seamless_cilogon')->debug($msg);
       \Drupal::messenger()->addStatus($msg);
     }
 
