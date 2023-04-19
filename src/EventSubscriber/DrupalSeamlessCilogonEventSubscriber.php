@@ -27,13 +27,13 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
   public function onRequest(RequestEvent $event)
   {
 
-    if (!$event->isMasterRequest()) {
+    if (!$event->isMainRequest()) {
       return;
     }
 
-    if (!$this->verify_domain_is_asp()) {
-      return;
-    }
+    #if (!$this->verify_domain_is_asp()) {
+    #  return;
+    #}
 
     $seamless_login_enabled = \Drupal::state()->get('drupal_seamless_cilogon.seamless_login_enabled', TRUE);
     if (!$seamless_login_enabled) {
@@ -42,7 +42,7 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
 
     // Don't attempt to redirect if the cilogon_auth module is not installed.
     $moduleHandler = \Drupal::service('module_handler');
-    if (!$moduleHandler->moduleExists('cilogon_auth')) {
+    if (!$moduleHandler->moduleExists('openid_connect_accessci_client')) {
       return;
     }
 
@@ -50,7 +50,7 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
     $route_name = \Drupal::routeMatch()->getRouteName();
     $cookie_name = self::SEAMLESSCOOKIENAME;
     $cookie_exists = NULL !== \Drupal::service('request_stack')->getCurrentRequest()->cookies->get($cookie_name);
-    $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', false);
+    $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', true);
 
     if ($seamless_debug) {
       $msg = __FUNCTION__ . "() ------- route_name = $route_name"
@@ -63,7 +63,7 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
     }
 
     // if coming back from cilogon, set the cookie
-    if ($route_name === 'cilogon_auth.redirect_controller_redirect') {
+    if ($route_name === 'openid_connect.redirect_controller_redirect') {
       if (!$cookie_exists) {
         $this->doSetCookie($event, $seamless_debug, $cookie_name);
       }
@@ -116,7 +116,8 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
     $cookie_value = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_value', $site_name);
     $cookie_expiration = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_expiration', '+18 hours');
     $cookie_expiration = strtotime($cookie_expiration);  // use value from form
-    $cookie_domain = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_domain', '.access-ci.org');
+    #$cookie_domain = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_domain', '.access-ci.org');
+    $cookie_domain = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_domain', '.d9.ddev.site');
     $cookie = new Cookie($cookie_name, $cookie_value, $cookie_expiration, '/', $cookie_domain);
 
     $request = $event->getRequest();
@@ -160,7 +161,8 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
 
     $cookie_value = '';
     $cookie_expiration = strtotime('-1 hour');
-    $cookie_domain = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_domain', '.access-ci.org');
+    #$cookie_domain = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_domain', '.access-ci.org');
+    $cookie_domain = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_domain', '.d9.ddev.site');
 
     // Set cookie in the past and then remove it.
     setcookie($cookie_name, $cookie_value, $cookie_expiration, '/', $cookie_domain);
@@ -200,17 +202,22 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
     // Setup redirect to CILogon flow.
     // TODO - move some of the following to a constructor for this class?
     $container = \Drupal::getContainer();
-    $client_name = 'cilogon';
-    $config_name = 'cilogon_auth.settings.' . $client_name;
+    #$client_name = 'cilogon';
+    #$config_name = 'cilogon_auth.settings.' . $client_name;
+    #$configuration = $container->get('config.factory')->get($config_name)->get('settings');
+    #$pluginManager = $container->get('plugin.manager.cilogon_auth_client.processor');
+    #$claims = $container->get('cilogon_auth.claims');
+    $client_name = 'accessci';
+    $config_name = 'openid_connect.settings.' . $client_name;
     $configuration = $container->get('config.factory')->get($config_name)->get('settings');
-    $pluginManager = $container->get('plugin.manager.cilogon_auth_client.processor');
-    $claims = $container->get('cilogon_auth.claims');
+    $pluginManager = $container->get('plugin.manager.openid_connect_client.processor');
+    $claims = $container->get('openid_connect.claims');
     $client = $pluginManager->createInstance($client_name, $configuration);
-    $scopes = $claims->getScopes();
+    $scopes = $claims->getClientScopes();
     $destination = $request->getRequestUri();
     $query = $request->getQueryString();
-    $_SESSION['cilogon_auth_op'] = 'login';
-    $_SESSION['cilogon_auth_destination'] = [$destination, ['query' => $query]];
+    $_SESSION['openid_connect_op'] = 'login';
+    $_SESSION['openid_connect_destination'] = [$destination, ['query' => $query]];
 
     $response = $client->authorize($scopes);
     $response->headers->set('Cache-Control', 'public, max-age=0');
