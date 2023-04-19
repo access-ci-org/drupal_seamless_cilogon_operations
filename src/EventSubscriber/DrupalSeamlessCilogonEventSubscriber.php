@@ -35,7 +35,10 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
     #  return;
     #}
 
-    $seamless_login_enabled = \Drupal::state()->get('drupal_seamless_cilogon.seamless_login_enabled', TRUE);
+    // Default to disabled--otherwise if it is not configured correctly, 
+    // it may be impossible to get to the configuration page
+
+    $seamless_login_enabled = \Drupal::state()->get('drupal_seamless_cilogon.seamless_login_enabled', FALSE);
     if (!$seamless_login_enabled) {
       return;
     }
@@ -47,6 +50,8 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
     }
 
     $user_is_authenticated = \Drupal::currentUser()->isAuthenticated();
+    // Get username so we can whitelist drupaladmin to log in w/ an SSO cookie
+    $username = \Drupal::currentUser()->getAccountName();
     $route_name = \Drupal::routeMatch()->getRouteName();
     $cookie_name = self::SEAMLESSCOOKIENAME;
     $cookie_exists = NULL !== \Drupal::service('request_stack')->getCurrentRequest()->cookies->get($cookie_name);
@@ -55,7 +60,8 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
     if ($seamless_debug) {
       $msg = __FUNCTION__ . "() ------- route_name = $route_name"
         . ", user_is_authenticated = " . ($user_is_authenticated ? "TRUE" : "FALSE")
-        . ", \$_COOKIE[$cookie_name] "
+	. ", username = $username"
+	. ", \$_COOKIE[$cookie_name] "
         . ($cookie_exists ? ('*exists* (with value ' . print_r($_COOKIE[$cookie_name], TRUE) . ')') : ' <not set>')
         . ' -- ' . basename(__FILE__) . ':' . __LINE__;
       \Drupal::messenger()->addStatus($msg);
@@ -84,10 +90,13 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
     // unless cookie doesn't exist, in which case, logout.
     if ($user_is_authenticated) {
       // Unless cookie doesn't exist. In this case, logout.
+      // Operations has a native Drupal admin user that needs to be able to
+      // login, so don't redirect to logout if username is drupaladmin
       if (
         !$cookie_exists &&
         $route_name !== 'user.logout' &&
-        $route_name !== 'user.login'
+	$route_name !== 'user.login' &&
+	$username !== 'drupaladmin'
       ) {
         $destination = "/user/logout/";
         $redir = new TrustedRedirectResponse($destination, '302');
@@ -206,7 +215,13 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
     $pluginManager = $container->get('plugin.manager.openid_connect_client.processor');
     $claims = $container->get('openid_connect.claims');
     $client = $pluginManager->createInstance($client_name, $configuration);
-    $scopes = $claims->getClientScopes();
+    #Seems that $claims->getScopes() doesn't get org.cilogon.userinfo
+    #$scopes = $claims->getScopes();
+    #And I've not had success trying to getClientScopes from accessid_client
+    #$scopes = $claims->getScopes($client->getPlugin());
+    #$scopes = $client->getClientScopes();
+    #But hardcoding a string works well!
+    $scopes = 'email openid profile org.cilogon.userinfo';
     $destination = $request->getRequestUri();
     $query = NULL;
     if (NULL !== \Drupal::request()->query->get('redirect')) {
