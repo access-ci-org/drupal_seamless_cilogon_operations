@@ -215,13 +215,10 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
     $pluginManager = $container->get('plugin.manager.openid_connect_client.processor');
     $claims = $container->get('openid_connect.claims');
     $client = $pluginManager->createInstance($client_name, $configuration);
-    #Seems that $claims->getScopes() doesn't get org.cilogon.userinfo
-    #$scopes = $claims->getScopes();
-    #And I've not had success trying to getClientScopes from accessid_client
-    #$scopes = $claims->getScopes($client->getPlugin());
-    #$scopes = $client->getClientScopes();
-    #But hardcoding a string works well!
-    $scopes = 'email openid profile org.cilogon.userinfo';
+    #Looks like the right way to get scopes for claims in openid_connect
+    #is to pass the client as an argument to getScopes.  It will then do a
+    #getClientScopes on the client, and return the right scopes for the claims
+    $scopes = $claims->getScopes($client);
     $destination = $request->getRequestUri();
     $query = NULL;
     if (NULL !== \Drupal::request()->query->get('redirect')) {
