@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\mymodule\StackMiddleware;
+namespace Drupal\drupal_seamless_cilogon\StackMiddleware;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
