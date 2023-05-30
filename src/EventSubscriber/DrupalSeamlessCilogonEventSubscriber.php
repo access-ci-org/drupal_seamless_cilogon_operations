@@ -26,7 +26,6 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
    */
   public function onRequest(RequestEvent $event)
   {
-    \Drupal::logger('drupal_seamless_cilogon')->notice('not cached');
 
     if (!$event->isMasterRequest()) {
       return;
