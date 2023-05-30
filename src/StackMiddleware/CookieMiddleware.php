@@ -8,7 +8,7 @@ use Symfony\Component\HttpKernel\HttpKernelInterface;
 /**
  * Provides a HTTP middleware.
  */
-class MyModule implements HttpKernelInterface {
+class StackMiddleware implements HttpKernelInterface {
 
   /**
    * The wrapped HTTP kernel.
