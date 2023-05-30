@@ -14,7 +14,6 @@ use Symfony\Component\HttpFoundation\Cookie;
  */
 class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
 {
-  \Drupal::logger('test')->notice("not cached");
 
   // for pantheon, cookie name must follow pattern S+ESS[a-z0-9]+
   // (see https://docs.pantheon.io/cookies#cache-busting-cookies)
@@ -27,6 +26,7 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
    */
   public function onRequest(RequestEvent $event)
   {
+    \Drupal::logger('drupal_seamless_cilogon')->notice('not cached');
 
     if (!$event->isMasterRequest()) {
       return;
