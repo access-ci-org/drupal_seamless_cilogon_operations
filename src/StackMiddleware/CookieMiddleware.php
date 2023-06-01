@@ -34,22 +34,22 @@ class CookieMiddleware implements HttpKernelInterface {
    */
   public function handle(Request $request, $type = self::MASTER_REQUEST, $catch = TRUE) {
     if (!$event->isMasterRequest()) {
-      return;
+      return $this->httpKernel->handle($request, $type, $catch);
     }
 
     if (!$this->verify_domain_is_asp()) {
-      return;
+      return $this->httpKernel->handle($request, $type, $catch);
     }
 
     $seamless_login_enabled = \Drupal::state()->get('drupal_seamless_cilogon.seamless_login_enabled', TRUE);
     if (!$seamless_login_enabled) {
-      return;
+      return $this->httpKernel->handle($request, $type, $catch);
     }
 
     // Don't attempt to redirect if the cilogon_auth module is not installed.
     $moduleHandler = \Drupal::service('module_handler');
     if (!$moduleHandler->moduleExists('cilogon_auth')) {
-      return;
+      return $this->httpKernel->handle($request, $type, $catch);
     }
 
     $user_is_authenticated = \Drupal::currentUser()->isAuthenticated();
@@ -73,7 +73,7 @@ class CookieMiddleware implements HttpKernelInterface {
       if (!$cookie_exists) {
         $this->doSetCookie($event, $seamless_debug, $cookie_name);
       }
-      return;
+      return $this->httpKernel->handle($request, $type, $catch);
     }
 
     // If logging out, delete the cookie.
@@ -81,7 +81,7 @@ class CookieMiddleware implements HttpKernelInterface {
       if ($cookie_exists) {
         $this->doDeleteCookie($event, $seamless_debug, $cookie_name);
       }
-      return;
+      return $this->httpKernel->handle($request, $type, $catch);
     }
 
     // If the user is authenticated, no need to redirect to CILogon, unless cookie doesn't exist, in
@@ -99,7 +99,7 @@ class CookieMiddleware implements HttpKernelInterface {
         $redir->addCacheableDependency($destination);
         $event->setResponse($redir);
       }
-      return;
+      return $this->httpKernel->handle($request, $type, $catch);
     }
 
     // If here -- user is unauthenticated.  If cookie exists, redirect to cilogon.
