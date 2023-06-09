@@ -35,25 +35,21 @@ class CookieMiddleware implements HttpKernelInterface {
    */
   public function handle(Request $request, $type = self::MASTER_REQUEST, $catch = TRUE) {
     if (!$type) {
-      \Drupal::logger('drupal_seamless_login')->notice('type');
       return $this->httpKernel->handle($request, $type, $catch);
     }
 
     if (!$this->verify_domain_is_asp()) {
-      \Drupal::logger('drupal_seamless_login')->notice('domain');
       return $this->httpKernel->handle($request, $type, $catch);
     }
 
     $seamless_login_enabled = \Drupal::state()->get('drupal_seamless_cilogon.seamless_login_enabled', TRUE);
     if (!$seamless_login_enabled) {
-      \Drupal::logger('drupal_seamless_login')->notice('seamless');
       return $this->httpKernel->handle($request, $type, $catch);
     }
 
     // Don't attempt to redirect if the cilogon_auth module is not installed.
     $moduleHandler = \Drupal::service('module_handler');
     if (!$moduleHandler->moduleExists('cilogon_auth')) {
-      \Drupal::logger('drupal_seamless_login')->notice('cilogin_auth');
       return $this->httpKernel->handle($request, $type, $catch);
     }
 
@@ -69,7 +65,6 @@ class CookieMiddleware implements HttpKernelInterface {
 
     // If coming back from cilogon, set the cookie.
     if ($arg[1] === 'cilogon-auth') {
-      \Drupal::logger('drupal_seamless_login')->notice('cilogin');
       return $this->httpKernel->handle($request, $type, $catch);
     }
 
@@ -88,7 +83,6 @@ class CookieMiddleware implements HttpKernelInterface {
 
     // If here -- user is unauthenticated.  If cookie exists, redirect to cilogon.
     if ($cookie_exists) {
-      \Drupal::logger('drupal_seamless_login')->notice('bing');
       $from = $request->getRequestUri();
       return new RedirectResponse($request->getBasePath() . "/user?redirect=$from", 302, ['Cache-Control' => 'no-cache']);
     }
