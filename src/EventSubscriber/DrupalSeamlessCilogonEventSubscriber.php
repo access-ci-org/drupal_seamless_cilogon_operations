@@ -3,6 +3,7 @@
 namespace Drupal\drupal_seamless_cilogon\EventSubscriber;
 
 use Drupal\Core\Routing\TrustedRedirectResponse;
+use Drupal\Component\Utility\Xss;
 use Drupal\Component\Utility\Html;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -208,7 +209,10 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
     $client = $pluginManager->createInstance($client_name, $configuration);
     $scopes = $claims->getScopes();
     $destination = $request->getRequestUri();
-    $query = $request->getQueryString();
+    $query = NULL;
+    if (NULL !== \Drupal::request()->query->get('redirect')) {
+      $query = Xss::filter(\Drupal::request()->query->get('redirect'));
+    }
     $_SESSION['cilogon_auth_op'] = 'login';
     $_SESSION['cilogon_auth_destination'] = [$destination, ['query' => $query]];
 
