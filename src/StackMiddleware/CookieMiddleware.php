@@ -57,12 +57,7 @@ class CookieMiddleware implements HttpKernelInterface {
       return $this->httpKernel->handle($request, $type, $catch);
     }
 
-    $user_is_authenticated = FALSE;
-    foreach ($_COOKIE as $cookie_key => $cookie) {
-      if (str_starts_with($cookie_key, 'SSESS')) {
-        $user_is_authenticated = TRUE;
-      }
-    }
+    $user_is_authenticated = isset($_SERVER['HTTP_COOKIE']) ? TRUE : FALSE;
     $path = $request->getRequestUri();
     $arg = explode('/', $path);
     $cookie_name = isset($_COOKIE['SESSaccesscisso']) ? $_COOKIE['SESSaccesscisso'] : NULL;
