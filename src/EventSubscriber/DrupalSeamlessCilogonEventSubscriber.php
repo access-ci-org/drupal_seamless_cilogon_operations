@@ -3,6 +3,7 @@
 namespace Drupal\drupal_seamless_cilogon\EventSubscriber;
 
 use Drupal\Core\Routing\TrustedRedirectResponse;
+use Drupal\Component\Utility\Xss;
 use Drupal\Component\Utility\Html;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -78,7 +79,7 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
       return;
     }
 
-    // If the user is authenticated, no need to redirect to CILogon, unless cookie doesn't exist, in 
+    // If the user is authenticated, no need to redirect to CILogon, unless cookie doesn't exist, in
     // which case, logout
     if ($user_is_authenticated) {
       // Unless cookie doesn't exist. In this case, logout.
@@ -104,7 +105,7 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
 
   /**
    * Add the cookie, via a redirect
-   * 
+   *
    * @param \Symfony\Component\HttpKernel\Event\RequestEvent $event
    *   Response event.
 
@@ -128,7 +129,7 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
     // $this->killSwitch->trigger();
     // from https://www.drupal.org/project/adv_varnish/issues/3127566:
     // Another documented way is to call the killSwitch in your code:
-    //  
+    //
     // commenting this out to see unnecessary
     // \Drupal::service('page_cache_kill_switch')->trigger();
 
@@ -150,7 +151,7 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
 
   /**
    * Delete the cookie, then redirect to user.logout
-   * 
+   *
    * @param \Symfony\Component\HttpKernel\Event\RequestEvent $event
    *   Response event.
 
@@ -185,8 +186,8 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
   }
 
   /**
-   * Redirect to Cilogon 
-   * 
+   * Redirect to Cilogon
+   *
    * @param \Symfony\Component\HttpKernel\Event\RequestEvent $event
    *   Response event.
 
@@ -208,7 +209,10 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface
     $client = $pluginManager->createInstance($client_name, $configuration);
     $scopes = $claims->getScopes();
     $destination = $request->getRequestUri();
-    $query = $request->getQueryString();
+    $query = NULL;
+    if (NULL !== \Drupal::request()->query->get('redirect')) {
+      $query = Xss::filter(\Drupal::request()->query->get('redirect'));
+    }
     $_SESSION['cilogon_auth_op'] = 'login';
     $_SESSION['cilogon_auth_destination'] = [$destination, ['query' => $query]];
 
