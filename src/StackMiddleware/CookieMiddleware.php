@@ -68,6 +68,11 @@ class CookieMiddleware implements HttpKernelInterface {
       return $this->httpKernel->handle($request, $type, $catch);
     }
 
+    // If hitting the nc page, not cached and will pass.
+    if ($arg[1] === 'nc') {
+      return $this->httpKernel->handle($request, $type, $catch);
+    }
+
     // If the user is authenticated, no need to redirect to CILogon, unless cookie doesn't exist, in
     // which case, logout
     if ($user_is_authenticated) {
