@@ -1,6 +1,7 @@
 services:
   http_middleware.CookieMiddleware:
     class: '\Drupal\drupal_seamless_cilogon\StackMiddleware\CookieMiddleware'
+    arguments: ['@logger.factory', '@state']
     tags:
       - { name: http_middleware, priority: 210, responder: true }
 
