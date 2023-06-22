@@ -93,7 +93,7 @@ class CookieMiddleware implements HttpKernelInterface {
     $user_is_authenticated = isset($_SERVER['HTTP_COOKIE']) ? TRUE : FALSE;
     $path = $request->getRequestUri();
     $arg = explode('/', $path);
-    $cookie_name = $_COOKIE['SESSaccesscisso'] ?? NULL;
+    $cookie_name = isset($_COOKIE['SESSaccesscisso']) ? $_COOKIE['SESSaccesscisso'] : NULL;
     $cookie_exists = NULL !== $cookie_name;
 
     if (str_starts_with($arg[1], 'user')) {
@@ -104,9 +104,9 @@ class CookieMiddleware implements HttpKernelInterface {
     }
 
     // If coming back from cilogon, set the cookie.
-    if ($arg[1] === 'path: cilogon-auth') {
+    if ($arg[1] === 'cilogon-auth') {
       if ($logging) {
-        $this->logger->notice('/cilogin-auth');
+        $this->logger->notice('path: /cilogin-auth');
       }
       return $this->httpKernel->handle($request, $type, $catch);
     }
