@@ -5,3 +5,10 @@ drupal_seamless_cilogon.drupal_seamless_cilogon_form:
     _title: 'Drupal Seamless CILogon configuration form'
   requirements:
     _role: 'administrator'
+drupal_seamless_cilogon.nc:
+   path: '/nc'
+   defaults:
+     _controller: '\Drupal\drupal_seamless_cilogon\Controller\NcController::noCache'
+     _title: ''
+   requirements:
+     _permission: 'access content'

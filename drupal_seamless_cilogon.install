@@ -1,0 +1,19 @@
+<?php
+
+/**
+ * @file
+ */
+
+/**
+ * Set state.
+ */
+function drupal_seamless_cilogon_install() {
+  \Drupal::state()->set('drupal_seamless_cilogon.logging', 0);
+}
+
+/**
+ * Set state.
+ */
+function drupal_seamless_cilogon_update_9000() {
+  \Drupal::state()->set('drupal_seamless_cilogon.logging', 0);
+}

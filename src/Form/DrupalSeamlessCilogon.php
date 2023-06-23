@@ -5,6 +5,7 @@ namespace Drupal\drupal_seamless_cilogon\Form;
 use Drupal\drupal_seamless_cilogon\EventSubscriber\DrupalSeamlessCilogonEventSubscriber;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormBase;
+use Drupal\Component\Utility\Xss;
 
 /**
  * Code to manage a form for the seamless cilogon parameters
@@ -17,6 +18,8 @@ class DrupalSeamlessCilogon extends FormBase
   public function buildForm(array $form, FormStateInterface $form_state)
   {
     $seamless_debug = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_debug', false);
+
+    $seamless_middleware_logging = \Drupal::state()->get('drupal_seamless_cilogon.logging');
 
     $seamless_login_enabled = \Drupal::state()->get('drupal_seamless_cilogon.seamless_login_enabled', true);
 
@@ -64,6 +67,13 @@ class DrupalSeamlessCilogon extends FormBase
       '#default_value' => $seamless_debug,
     ];
 
+    $form['seamless_middleware_logging'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable MiddleWare logging?'),
+      '#description' => $this->t('Enable logging to the Drupal Log.'),
+      '#default_value' => $seamless_middleware_logging,
+    ];
+
     $form['save_seamless_settings'] = [
       '#type' => 'submit',
       '#value' => $this->t('Save Seamless CILogon Settings'),
@@ -94,17 +104,18 @@ class DrupalSeamlessCilogon extends FormBase
   }
 
   /**
-   * 
+   *
    */
   public function doSaveSeamlessSettings(array &$form, FormStateInterface $form_state)
   {
-    \Drupal::state()->set('drupal_seamless_cilogon.seamless_login_enabled', $form_state->getValue('seamless_login_enabled'));
-    \Drupal::state()->set('drupal_seamless_cilogon.seamless_cookie_value', $form_state->getValue('seamless_cookie_value'));
-    \Drupal::state()->set('drupal_seamless_cilogon.seamless_cookie_domain', $form_state->getValue('seamless_cookie_domain'));
-    \Drupal::state()->set('drupal_seamless_cilogon.seamless_cookie_expiration', $form_state->getValue('seamless_cookie_expiration'));
+    \Drupal::state()->set('drupal_seamless_cilogon.seamless_login_enabled', Xss::filter($form_state->getValue('seamless_login_enabled')));
+    \Drupal::state()->set('drupal_seamless_cilogon.seamless_cookie_value', Xss::filter($form_state->getValue('seamless_cookie_value')));
+    \Drupal::state()->set('drupal_seamless_cilogon.seamless_cookie_domain', Xss::filter($form_state->getValue('seamless_cookie_domain')));
+    \Drupal::state()->set('drupal_seamless_cilogon.seamless_cookie_expiration', Xss::filter($form_state->getValue('seamless_cookie_expiration')));
 
-    $seamless_debug = $form_state->getValue('seamless_cookie_debug');
+    $seamless_debug = Xss::filter($form_state->getValue('seamless_cookie_debug'));
     \Drupal::state()->set('drupal_seamless_cilogon.seamless_cookie_debug', $seamless_debug);
+    \Drupal::state()->set('drupal_seamless_cilogon.logging', Xss::filter($form_state->getValue('seamless_middleware_logging')));
 
     if ($seamless_debug) {
 
