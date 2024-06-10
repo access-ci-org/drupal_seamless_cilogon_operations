@@ -167,8 +167,7 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
 
     $cookie_value = '';
     $cookie_expiration = strtotime('-1 hour');
-    #$cookie_domain = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_domain', '.access-ci.org');
-    $cookie_domain = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_domain', '.d9.ddev.site');
+    $cookie_domain = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_domain', '.access-ci.org');
 
     // Set cookie in the past and then remove it.
     setcookie($cookie_name, $cookie_value, $cookie_expiration, '/', $cookie_domain);
