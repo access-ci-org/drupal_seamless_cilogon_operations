@@ -58,7 +58,7 @@ class CookieMiddleware implements HttpKernelInterface {
   /**
    * {@inheritdoc}
    */
-  public function handle(Request $request, int $type = self::MAIN_REQUEST, bool $catch = TRUE): Response {
+  public function handle(Request $request, $type = self::MASTER_REQUEST, $catch = TRUE): Response {
     $logging = $this->state->get('drupal_seamless_cilogon.logging');
     if (!$type) {
       if ($logging) {
