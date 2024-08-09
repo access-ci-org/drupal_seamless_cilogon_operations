@@ -69,8 +69,7 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
     }
 
     // If coming back from cilogon, set the cookie.
-    if ($route_name === 'cilogon_auth.redirect_controller_redirect') {
-    // if coming back from cilogon, set the cookie
+    // if ($route_name === 'cilogon_auth.redirect_controller_redirect') {
     if ($route_name === 'openid_connect.redirect_controller_redirect') {
       if (!$cookie_exists) {
         $this->doSetCookie($event, $seamless_debug, $cookie_name);
@@ -211,7 +210,7 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
     $client_name = 'accessci';
     $config_name = 'openid_connect.settings.' . $client_name;
     $configuration = $container->get('config.factory')->get($config_name)->get('settings');
-    $pluginManager = $container->get('plugin.manager.openid_connect_client.processor');
+    $pluginManager = $container->get('plugin.manager.openid_connect_client');
     $claims = $container->get('openid_connect.claims');
     $client = $pluginManager->createInstance($client_name, $configuration);
     #Looks like the right way to get scopes for claims in openid_connect
