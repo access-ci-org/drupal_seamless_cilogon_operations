@@ -126,7 +126,9 @@ class DrupalSeamlessCilogonEventSubscriber implements EventSubscriberInterface {
     // Use value from form.
     $cookie_expiration = strtotime($cookie_expiration);
     $cookie_domain = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_domain', '.access-ci.org');
-    $cookie = new Cookie($cookie_name, $cookie_value, $cookie_expiration, '/', $cookie_domain);
+    $cookie_secure = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_secure', false);
+    $cookie_http_only = \Drupal::state()->get('drupal_seamless_cilogon.seamless_cookie_http_only', false);
+    $cookie = new Cookie($cookie_name, $cookie_value, $cookie_expiration, '/', $cookie_domain, $cookie_secure, $cookie_http_only);
 
     $request = $event->getRequest();
     $destination = $request->getRequestUri();
